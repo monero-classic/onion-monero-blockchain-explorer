@@ -105,19 +105,14 @@ set(LIBRARIES
         cryptonote_core
         cryptonote_protocol
         cryptonote_basic
-        multisig
         daemonizer
         cncrypto
         blocks
         lmdb
         ringct
-        ringct_basic
-        device
         common
         mnemonics
         easylogging
-        checkpoints
-        version
         epee
         ${Boost_LIBRARIES}
         pthread

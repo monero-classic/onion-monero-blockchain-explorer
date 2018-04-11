@@ -32,9 +32,7 @@ namespace xmreg
 MicroCore::MicroCore():
         m_mempool(m_blockchain_storage),
         m_blockchain_storage(m_mempool)
-{
-    m_device = &hw::get_device("default");
-}
+    {}
 
 
 /**
@@ -90,7 +88,7 @@ MicroCore::init(const string& _blockchain_path)
 
     // initialize Blockchain object to manage
     // the database.
-    return m_blockchain_storage.init(db, m_hardfork, network_type::MAINNET);
+        return m_blockchain_storage.init(db, m_hardfork, false);
 }
 
 /**
@@ -358,12 +356,6 @@ string
 MicroCore::get_blkchain_path()
 {
     return blockchain_path;
-}
-
-hw::device* const
-MicroCore::get_device() const
-{
-    return m_device;
 }
 
 }

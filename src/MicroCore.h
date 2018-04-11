@@ -31,8 +31,6 @@ namespace xmreg
         tx_memory_pool m_mempool;
         Blockchain m_blockchain_storage;
 
-        hw::device* m_device;
-
     public:
         MicroCore();
 
@@ -69,8 +67,6 @@ namespace xmreg
         string
         get_blkchain_path();
 
-        hw::device* const
-        get_device() const;
 
         virtual ~MicroCore();
     };
