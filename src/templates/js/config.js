@@ -5,7 +5,7 @@ var config = {
     txMinConfirms: 10,         // corresponds to CRYPTONOTE_DEFAULT_TX_SPENDABLE_AGE in Monero
     txCoinbaseMinConfirms: 60, // corresponds to CRYPTONOTE_MINED_MONEY_UNLOCK_WINDOW in Monero
     coinSymbol: 'XMR',
-    openAliasPrefix: "xmr",
+    openAliasPrefix: "xmc",
     coinName: 'Monero',
     coinUriPrefix: 'monero:',
     addressPrefix: 18,
