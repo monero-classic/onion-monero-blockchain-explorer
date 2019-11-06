@@ -33,12 +33,12 @@
 
     {{^tx_prove}}
         <h3>Checking which outputs belong to the given address and viewkey</h3>
-        <h5>address: {{xmr_address}}</h5>
+        <h5>address: {{xmc_address}}</h5>
         <h5>viewkey: {{viewkey}}</h5>
     {{/tx_prove}}
     {{#tx_prove}}
         <h3>Prove that you send this tx to the given address</h3>
-        <h5>address: {{xmr_address}}</h5>
+        <h5>address: {{xmc_address}}</h5>
         <h5>Tx private key: {{viewkey}}</h5>
     {{/tx_prove}}
 
@@ -69,9 +69,9 @@
         </table>
 
         <h3>
-            Sum XMR from matched outputs (i.e., incoming XMR):
+            Sum XMC from matched outputs (i.e., incoming XMC):
             {{#found_our_outputs}}
-                {{sum_xmr}}
+                {{sum_xmc}}
             {{/found_our_outputs}}
             {{^found_our_outputs}}
                 0.000000000000
@@ -142,7 +142,7 @@
 
         </div>
         <h3>
-            Sum XMR from matched and marked by * ring member's outputs: {{sum_mixin_xmr}}
+            Sum XMC from matched and marked by * ring member's outputs: {{sum_mixin_xmc}}
             <br/>
             <span style="font-size: 16px"> Possible spending is:
                 {{possible_spending}} (tx fee included)
@@ -155,7 +155,7 @@
                <br/>
                <span style="font-size: 14px">
                  Number of possible our mixins is {{no_all_possible_mixins}}
-                      for {{all_possible_mixins_amount}} xmr
+                      for {{all_possible_mixins_amount}} xmc
                       (amount as uint64).
                </span>
         </h3>
