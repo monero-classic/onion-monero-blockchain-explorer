@@ -1104,8 +1104,8 @@ mempool(bool add_header_and_footer = false, uint64_t no_of_mempool_tx = 25)
                 {"hash"            , pod_to_hex(mempool_tx.tx_hash)},
                 {"fee"             , mempool_tx.fee_micro_str},
                 {"payed_for_kB"    , mempool_tx.payed_for_kB_micro_str},
-                {"xmr_inputs"      , mempool_tx.xmr_inputs_str},
-                {"xmr_outputs"     , mempool_tx.xmr_outputs_str},
+                {"xmc_inputs"      , mempool_tx.xmr_inputs_str},
+                {"xmc_outputs"     , mempool_tx.xmr_outputs_str},
                 {"no_inputs"       , mempool_tx.no_inputs},
                 {"no_outputs"      , mempool_tx.no_outputs},
                 {"pID"             , string {mempool_tx.pID}},
@@ -2157,7 +2157,7 @@ show_my_outputs(string tx_hash_str,
 
     if (xmr_address_str.empty())
     {
-        return string("Monero address not provided!");
+        return string("Monero-Classic address not provided!");
     }
 
     if (viewkey_str.empty())
@@ -2183,7 +2183,7 @@ show_my_outputs(string tx_hash_str,
     if (!xmreg::parse_str_address(xmr_address_str,  address_info, nettype))
     {
         cerr << "Cant parse string address: " << xmr_address_str << endl;
-        return string("Cant parse xmr address: " + xmr_address_str);
+        return string("Cant parse xmc address: " + xmr_address_str);
     }
 
     // parse string representing given private key
@@ -2354,7 +2354,7 @@ show_my_outputs(string tx_hash_str,
             {"stagenet"             , stagenet},
             {"tx_hash"              , tx_hash_str},
             {"tx_prefix_hash"       , pod_to_hex(txd.prefix_hash)},
-            {"xmr_address"          , xmr_address_str},
+            {"xmc_address"          , xmr_address_str},
             {"viewkey"              , viewkey_str_partial},
             {"tx_pub_key"           , pod_to_hex(txd.pk)},
             {"blk_height"           , tx_blk_height_str},
@@ -2913,13 +2913,13 @@ show_my_outputs(string tx_hash_str,
     context.emplace("outputs", outputs);
 
     context["found_our_outputs"] = (sum_xmr > 0);
-    context["sum_xmr"]           = xmreg::xmr_amount_to_str(sum_xmr);
+    context["sum_xmc"]           = xmreg::xmr_amount_to_str(sum_xmr);
 
     context.emplace("inputs", inputs);
 
     context["show_inputs"]   = show_key_images;
     context["inputs_no"]     = static_cast<uint64_t>(inputs.size());
-    context["sum_mixin_xmr"] = xmreg::xmr_amount_to_str(
+    context["sum_mixin_xmc"] = xmreg::xmr_amount_to_str(
             sum_mixin_xmr, "{:0.12f}", false);
 
 
@@ -3467,7 +3467,7 @@ show_checkrawtx(string raw_tx_data, string action)
                 real_ammounts.push_back(ptx.construction_data.change_dts.amount);
             };
 
-            tx_context["outputs_xmr_sum"] = xmreg::xmr_amount_to_str(outputs_xmr_sum);
+            tx_context["outputs_xmc_sum"] = xmreg::xmr_amount_to_str(outputs_xmr_sum);
 
             tx_context.insert({"dest_infos", destination_addresses});
 
@@ -3557,7 +3557,7 @@ show_checkrawtx(string raw_tx_data, string action)
             tx_context["have_raw_tx"] = true;
 
             // provide total mount of inputs xmr
-            tx_context["inputs_xmr_sum"] = xmreg::xmr_amount_to_str(inputs_xmr_sum);
+            tx_context["inputs_xmc_sum"] = xmreg::xmr_amount_to_str(inputs_xmr_sum);
 
             // get reference to inputs array created of the tx
             mstch::array& inputs = boost::get<mstch::array>(tx_context["inputs"]);
@@ -3976,8 +3976,8 @@ show_checkrawkeyimgs(string raw_data, string viewkey_str)
             xmreg::print_address(address_info, nettype))});
     context.insert({"viewkey"        , REMOVE_HASH_BRAKETS(
             fmt::format("{:s}", prv_view_key))});
-    context.insert({"has_total_xmr"  , false});
-    context.insert({"total_xmr"      , string{}});
+    context.insert({"has_total_xmc"  , false});
+    context.insert({"total_xmc"      , string{}});
     context.insert({"key_imgs"       , mstch::array{}});
 
 
@@ -4109,8 +4109,8 @@ show_checkcheckrawoutput(string raw_data, string viewkey_str)
     context.insert({"address"        , REMOVE_HASH_BRAKETS(
             xmreg::print_address(address_info, nettype))});
     context.insert({"viewkey"        , pod_to_hex(prv_view_key)});
-    context.insert({"has_total_xmr"  , false});
-    context.insert({"total_xmr"      , string{}});
+    context.insert({"has_total_xmc"  , false});
+    context.insert({"total_xmc"      , string{}});
     context.insert({"output_keys"    , mstch::array{}});
 
     mstch::array& output_keys_ctx = boost::get<mstch::array>(context["output_keys"]);
@@ -4249,8 +4249,8 @@ show_checkcheckrawoutput(string raw_data, string viewkey_str)
 
     if (total_xmr > 0)
     {
-        context["has_total_xmr"] = true;
-        context["total_xmr"] = xmreg::xmr_amount_to_str(total_xmr);
+        context["has_total_xmc"] = true;
+        context["total_xmc"] = xmreg::xmr_amount_to_str(total_xmr);
     }
 
     return mstch::render(full_page, context);;
@@ -4381,7 +4381,7 @@ show_address_details(const address_parse_info& address_info, cryptonote::network
     string pub_spendkey_str = fmt::format("{:s}", address_info.address.m_spend_public_key);
 
     mstch::map context {
-            {"xmr_address"        , REMOVE_HASH_BRAKETS(address_str)},
+            {"xmc_address"        , REMOVE_HASH_BRAKETS(address_str)},
             {"public_viewkey"     , REMOVE_HASH_BRAKETS(pub_viewkey_str)},
             {"public_spendkey"    , REMOVE_HASH_BRAKETS(pub_spendkey_str)},
             {"is_integrated_addr" , false},
@@ -4408,7 +4408,7 @@ show_integrated_address_details(const address_parse_info& address_info,
     string enc_payment_id_str = fmt::format("{:s}", encrypted_payment_id);
 
     mstch::map context {
-            {"xmr_address"          , REMOVE_HASH_BRAKETS(address_str)},
+            {"xmc_address"          , REMOVE_HASH_BRAKETS(address_str)},
             {"public_viewkey"       , REMOVE_HASH_BRAKETS(pub_viewkey_str)},
             {"public_spendkey"      , REMOVE_HASH_BRAKETS(pub_spendkey_str)},
             {"encrypted_payment_id" , REMOVE_HASH_BRAKETS(enc_payment_id_str)},
@@ -4919,7 +4919,7 @@ json_detailedtransaction(string tx_hash_str)
     tx_context.erase("show_part_of_inputs");
     tx_context.erase("show_more_details_link");
     tx_context.erase("max_no_of_inputs_to_show");
-    tx_context.erase("inputs_xmr_sum_not_zero");
+    tx_context.erase("inputs_xmc_sum_not_zero");
     tx_context.erase("have_raw_tx");
     tx_context.erase("have_any_unknown_amount");
     tx_context.erase("has_error");
@@ -5498,7 +5498,7 @@ json_outputs(string tx_hash_str,
     if (address_str.empty())
     {
         j_response["status"]  = "error";
-        j_response["message"] = "Monero address not provided";
+        j_response["message"] = "Monero-Classic address not provided";
         return j_response;
     }
 
@@ -5723,7 +5723,7 @@ json_outputsblocks(string _limit,
     if (address_str.empty())
     {
         j_response["status"]  = "error";
-        j_response["message"] = "Monero address not provided";
+        j_response["message"] = "Monero-Classic address not provided";
         return j_response;
     }
 
@@ -6159,8 +6159,8 @@ get_tx_json(const transaction& tx, const tx_details& txd)
             {"tx_fee"      , txd.fee},
             {"mixin"       , txd.mixin_no},
             {"tx_size"     , txd.size},
-            {"xmr_outputs" , txd.xmr_outputs},
-            {"xmr_inputs"  , txd.xmr_inputs},
+            {"xmc_outputs" , txd.xmr_outputs},
+            {"xmc_inputs"  , txd.xmr_inputs},
             {"tx_version"  , static_cast<uint64_t>(txd.version)},
             {"rct_type"    , tx.rct_signatures.type},
             {"coinbase"    , is_coinbase(tx)},
@@ -6614,8 +6614,8 @@ construct_tx_context(transaction tx, uint16_t with_ring_signatures = 0)
 
 
     context["have_any_unknown_amount"]  = have_any_unknown_amount;
-    context["inputs_xmr_sum_not_zero"]  = (inputs_xmr_sum > 0);
-    context["inputs_xmr_sum"]           = xmreg::xmr_amount_to_str(inputs_xmr_sum);
+    context["inputs_xmc_sum_not_zero"]  = (inputs_xmr_sum > 0);
+    context["inputs_xmc_sum"]           = xmreg::xmr_amount_to_str(inputs_xmr_sum);
     context["server_time"]              = server_time_str;
     context["enable_mixins_details"]    = detailed_view;
     context["enable_as_hex"]            = enable_as_hex;
@@ -6688,7 +6688,7 @@ construct_tx_context(transaction tx, uint16_t with_ring_signatures = 0)
 
     } //  for (pair<txout_to_key, uint64_t>& outp: txd.output_pub_keys)
 
-    context["outputs_xmr_sum"] = xmreg::xmr_amount_to_str(outputs_xmr_sum);
+    context["outputs_xmc_sum"] = xmreg::xmr_amount_to_str(outputs_xmr_sum);
 
     context.emplace("outputs", outputs);
 
