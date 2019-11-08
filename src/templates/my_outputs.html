@@ -78,7 +78,7 @@
             {{/found_our_outputs}}
         </h3>
         <h4>
-            <a href="{{shortcut_url}}" target="_blank">link to this page</a>
+            <a href="{{domain_url}}{{shortcut_url}}" target="_blank">link to this page</a>
         </h4>
 
     </div>
@@ -152,6 +152,12 @@
                 it is impossible to know whether this is your real spending. <br/>
                 So do not take this number seriously.
                 It is probably totally wrong anyway.</span>
+               <br/>
+               <span style="font-size: 14px">
+                 Number of possible our mixins is {{no_all_possible_mixins}}
+                      for {{all_possible_mixins_amount}} xmc
+                      (amount as uint64).
+               </span>
         </h3>
     </div>
 

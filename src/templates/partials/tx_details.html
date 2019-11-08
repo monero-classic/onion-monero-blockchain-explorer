@@ -82,7 +82,7 @@
                 <input type="radio" id="tab-1" name="tab-group-1" checked>
                 <label for="tab-1">Decode outputs</label>
                 <div class="content">
-                    <h4 style="margin: 0px">Check which outputs belong to given Monero Classic address/subaddress and viewkey</h4>
+                    <h4 style="margin: 0px">Check which outputs belong to given Monero-Classic address/subaddress and viewkey</h4>
                     <h5 style="margin: 0px">
                         For RingCT transactions, outputs' amounts are also decoded
                         <br/>
@@ -95,7 +95,7 @@
                     </h5>
                     <form action="/myoutputs" method="post" style="width:100%; margin-top:2px" class="style-1">
                         <input type="hidden" name="tx_hash" value="{{tx_hash}}"><br/>
-                        <input type="text" name="xmc_address" size="110" placeholder="Monero address/subaddress"><br/>
+                        <input type="text" name="xmc_address" size="110" placeholder="Monero-Classic address/subaddress"><br/>
                         <input type="text" name="viewkey" size="110" placeholder="Private viewkey" style="margin-top:5px"><br/>
                         <input type="hidden" name="raw_tx_data" value="{{raw_tx_data}}">
                         <!--above raw_tx_data field only used when checking raw tx data through tx pusher-->
@@ -117,10 +117,10 @@
                 <label for="tab-2">Prove sending</label>
 
                 <div class="content">
-                    <h4 style="margin: 0px">Prove to someone that you have sent them Monero Classic in this transaction</h4>
+                    <h4 style="margin: 0px">Prove to someone that you have sent them Monero-Classic in this transaction</h4>
                     <h5 style="margin: 0px">
                         Tx private key can be obtained using <i>get_tx_key</i>
-                        command in  <i>monero-wallet-cli</i> command line tool
+                        command in  <i>moneroclassic-wallet-cli</i> command line tool
                         <br/>
                         {{#enable_js}}
                             Note: address/subaddress and tx private key are NOT sent to the server, as the calculations are done on the client side
@@ -134,7 +134,7 @@
                        <input type="text" name="txprvkey" size="120" placeholder="Tx private key"><br/>
                         <input type="hidden" name="raw_tx_data" value="{{raw_tx_data}}">
                         <!--above raw_tx_data field only used when checking raw tx data through tx pusher-->
-                       <input type="text" name="xmcaddress" size="120" placeholder="Recipient's monero classic address/subaddress" style="margin-top:5px"><br/>
+                       <input type="text" name="xmcaddress" size="120" placeholder="Recipient's moneroclassic address/subaddress" style="margin-top:5px"><br/>
 
                         {{#enable_js}}
                             <!-- if have js, DONOT submit the form to server.
@@ -183,9 +183,8 @@
 
 
                 $("#decode_btn").click(function() {
-
-                    var address = $("input[name=xmc_address]").val();
-                    var viewkey = $("input[name=viewkey]").val();
+                    var address = $("input[name=xmc_address]").val().trim();
+                    var viewkey = $("input[name=viewkey]").val().trim();
 
                     if (!address || !viewkey) {
                         $("#decode-prove-results").html("<h4>Address or viewkey key not provided!</h4>");
@@ -209,9 +208,8 @@
 
                 $("#prove_btn").click(function() {
 
-                    var address    = $("input[name=xmcaddress]").val();
-                    var tx_prv_key = $("input[name=txprvkey]").val();
-
+                    var address    = $("input[name=xmcaddress]").val().trim();
+                    var tx_prv_key = $("input[name=txprvkey]").val().trim();
                     if (!address || !tx_prv_key) {
                         $("#decode-prove-results").html("<h4>Address or tx private key not provided!</h4>");
                         return;
@@ -325,7 +323,7 @@
 
                         mine_output_str = '<span style="color: #008009;font-weight: bold">true</span>';
 
-                        if (is_rct) {
+                        if (is_rct && rct_type > 0 /* not coinbase*/) {
                             try {
                                 //var ecdh = decodeRct(tx_json.rct_signatures, output_idx, key_derivation);
                                 var ecdh = decodeRct(tx_json.rct_signatures, output_idx,
@@ -531,7 +529,14 @@
 {{^have_raw_tx}}
     {{^with_ring_signatures}}
         {{#show_more_details_link}}
-            <h5 style="margin-top:1px"><a href="/tx/{{tx_hash}}/1">More details</a></h5>
+            <h5 style="margin-top:1px">
+                <a href="/tx/{{tx_hash}}/1">More details</a>
+                {{#enable_as_hex}}
+                    | <a href="/txhex/{{tx_hash}}">Tx as hex</a>
+                    | <a href="/ringmembershex/{{tx_hash}}">Ring member outputs/mixins as hex</a>
+                    | <a href="/ringmemberstxhex/{{tx_hash}}">Full ring member txs as hex</a>
+                {{/enable_as_hex}}
+            </h5>
         {{/show_more_details_link}}
     {{/with_ring_signatures}}
     {{#with_ring_signatures}}

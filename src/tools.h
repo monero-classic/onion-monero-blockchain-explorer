@@ -338,7 +338,7 @@ void chunks(Iterator begin,
  */
 template <typename T>
 inline string
-remove_bad_chars(T&& in_str, std::regex const& rgx = std::regex ("[^a-zA-Z0-9]"))
+remove_bad_chars(T&& in_str, std::regex const& rgx = std::regex ("[^a-zA-Z0-9+/=]"))
 {
     return std::regex_replace(std::forward<T>(in_str), rgx, "");
 }
@@ -369,6 +369,15 @@ calc_median(It it_begin, It it_end)
 
 void
 pause_execution(uint64_t no_seconds, const string& text = "now");
+
+string
+tx_to_hex(transaction const& tx);
+
+void
+get_metric_prefix(cryptonote::difficulty_type hr, double& hr_d, char& prefix);
+
+cryptonote::difficulty_type
+make_difficulty(uint64_t low, uint64_t high);
 
 }
 
