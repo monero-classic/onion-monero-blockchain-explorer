@@ -100,15 +100,15 @@ get_tx_pub_key_from_str_hash(Blockchain& core_storage,
 
 bool
 parse_str_address(const string& address_str,
-                  address_parse_info& address_info,
-                  cryptonote::network_type nettype = cryptonote::network_type::MAINNET);
+                  account_public_address& address,
+                  bool testnet = false);
 
 inline bool
 is_separator(char c);
 
 string
-print_address(const address_parse_info& address,
-              cryptonote::network_type nettype = cryptonote::network_type::MAINNET);
+print_address(const account_public_address& address,
+              bool testnet = false);
 
 string
 print_sig (const signature& sig);
@@ -123,11 +123,11 @@ string
 timestamp_to_str_gm(time_t timestamp, const char* format = "%F %T");
 
 ostream&
-operator<< (ostream& os, const address_parse_info& addr_info);
+operator<< (ostream& os, const account_public_address& addr);
 
 
 string
-get_default_lmdb_folder(cryptonote::network_type nettype = cryptonote::network_type::MAINNET);
+get_default_lmdb_folder(bool testnet = false);
 
 bool
 generate_key_image(const crypto::key_derivation& derivation,
@@ -139,7 +139,7 @@ generate_key_image(const crypto::key_derivation& derivation,
 bool
 get_blockchain_path(const boost::optional<string>& bc_path,
                     bf::path& blockchain_path,
-                    cryptonote::network_type nettype = cryptonote::network_type::MAINNET);
+                    bool testnet = false);
 
 uint64_t
 sum_money_in_outputs(const transaction& tx);

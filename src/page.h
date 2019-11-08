@@ -397,11 +397,9 @@ rpccalls rpc;
 
 atomic<time_t> server_timestamp;
 
-
-cryptonote::network_type nettype;
-bool mainnet;
-bool testnet;
-bool stagenet;
+    bool mainnet;
+    bool testnet;
+    bool stagenet;
 
 bool enable_js;
 
@@ -456,138 +454,128 @@ lru_cache_t<tx_info_cache::key, tx_info_cache> tx_context_cache;
 
 
 public:
+    page(MicroCore* _mcore,
+         Blockchain* _core_storage,
+         string _deamon_url,
+         bool _testnet,
+         bool _enable_pusher,
+         bool _enable_js,
+         bool _enable_key_image_checker,
+         bool _enable_output_key_checker,
+         bool _enable_autorefresh_option,
+         bool _enable_mixins_details,
+         bool _enable_tx_cache,
+         bool _enable_block_cache,
+         bool _show_cache_times,
+         uint64_t _no_blocks_on_index,
+         uint64_t _mempool_info_timeout,
+         string _testnet_url,
+         string _stagenet_url,
+         string _mainnet_url)
+            : mcore {_mcore},
+              core_storage {_core_storage},
+              rpc {_deamon_url},
+              server_timestamp {std::time(nullptr)},
+              testnet {_testnet},
+              enable_pusher {_enable_pusher},
+              enable_js {_enable_js},
+              enable_key_image_checker {_enable_key_image_checker},
+              enable_output_key_checker {_enable_output_key_checker},
+              enable_autorefresh_option {_enable_autorefresh_option},
+              enable_mixins_details {_enable_mixins_details},
+              enable_tx_cache {_enable_tx_cache},
+              enable_block_cache {_enable_block_cache},
+              show_cache_times {_show_cache_times},
+              no_blocks_on_index {_no_blocks_on_index},
+              mempool_info_timeout {_mempool_info_timeout},
+              testnet_url {_testnet_url},
+              stagenet_url {_stagenet_url},
+              mainnet_url {_mainnet_url},
+              block_tx_cache(200),
+              tx_context_cache(1000)
+    {
 
-page(MicroCore* _mcore,
-     Blockchain* _core_storage,
-     string _deamon_url,
-     cryptonote::network_type _nettype,
-     bool _enable_pusher,
-     bool _enable_js,
-     bool _enable_as_hex,
-     bool _enable_key_image_checker,
-     bool _enable_output_key_checker,
-     bool _enable_autorefresh_option,
-     bool _enable_mixins_details,
-     bool _enable_tx_cache,
-     bool _enable_block_cache,
-     bool _show_cache_times,
-     uint64_t _no_blocks_on_index,
-     uint64_t _mempool_info_timeout,
-     string _testnet_url,
-     string _stagenet_url,
-     string _mainnet_url)
-        : mcore {_mcore},
-          core_storage {_core_storage},
-          rpc {_deamon_url},
-          server_timestamp {std::time(nullptr)},
-          nettype {_nettype},
-          enable_pusher {_enable_pusher},
-          enable_js {_enable_js},
-          enable_as_hex {_enable_as_hex},
-          enable_key_image_checker {_enable_key_image_checker},
-          enable_output_key_checker {_enable_output_key_checker},
-          enable_autorefresh_option {_enable_autorefresh_option},
-          enable_mixins_details {_enable_mixins_details},
-          enable_tx_cache {_enable_tx_cache},
-          enable_block_cache {_enable_block_cache},
-          show_cache_times {_show_cache_times},
-          no_blocks_on_index {_no_blocks_on_index},
-          mempool_info_timeout {_mempool_info_timeout},
-          testnet_url {_testnet_url},
-          stagenet_url {_stagenet_url},
-          mainnet_url {_mainnet_url},
-          block_tx_cache(200),
-          tx_context_cache(1000)
-{
-    mainnet = nettype == cryptonote::network_type::MAINNET;
-    testnet = nettype == cryptonote::network_type::TESTNET;
-    stagenet = nettype == cryptonote::network_type::STAGENET;
 
-    no_of_mempool_tx_of_frontpage = 25;
+        no_of_mempool_tx_of_frontpage = 25;
 
-    // read template files for all the pages
-    // into template_file map
+        // read template files for all the pages
+        // into template_file map
 
-    template_file["css_styles"]      = xmreg::read(TMPL_CSS_STYLES);
-    template_file["header"]          = xmreg::read(TMPL_HEADER);
-    template_file["footer"]          = get_footer();
-    template_file["index2"]          = get_full_page(xmreg::read(TMPL_INDEX2));
-    template_file["mempool"]         = xmreg::read(TMPL_MEMPOOL);
-    template_file["altblocks"]       = get_full_page(xmreg::read(TMPL_ALTBLOCKS));
-    template_file["mempool_error"]   = xmreg::read(TMPL_MEMPOOL_ERROR);
-    template_file["mempool_full"]    = get_full_page(template_file["mempool"]);
-    template_file["block"]           = get_full_page(xmreg::read(TMPL_BLOCK));
-    template_file["tx"]              = get_full_page(xmreg::read(TMPL_TX));
-    template_file["my_outputs"]      = get_full_page(xmreg::read(TMPL_MY_OUTPUTS));
-    template_file["rawtx"]           = get_full_page(xmreg::read(TMPL_MY_RAWTX));
-    template_file["checkrawtx"]      = get_full_page(xmreg::read(TMPL_MY_CHECKRAWTX));
-    template_file["pushrawtx"]       = get_full_page(xmreg::read(TMPL_MY_PUSHRAWTX));
-    template_file["rawkeyimgs"]      = get_full_page(xmreg::read(TMPL_MY_RAWKEYIMGS));
-    template_file["rawoutputkeys"]   = get_full_page(xmreg::read(TMPL_MY_RAWOUTPUTKEYS));
-    template_file["checkrawkeyimgs"] = get_full_page(xmreg::read(TMPL_MY_CHECKRAWKEYIMGS));
-    template_file["checkoutputkeys"] = get_full_page(xmreg::read(TMPL_MY_CHECKRAWOUTPUTKEYS));
-    template_file["address"]         = get_full_page(xmreg::read(TMPL_ADDRESS));
-    template_file["search_results"]  = get_full_page(xmreg::read(TMPL_SEARCH_RESULTS));
-    template_file["tx_details"]      = xmreg::read(string(TMPL_PARIALS_DIR) + "/tx_details.html");
-    template_file["tx_table_header"] = xmreg::read(string(TMPL_PARIALS_DIR) + "/tx_table_header.html");
-    template_file["tx_table_row"]    = xmreg::read(string(TMPL_PARIALS_DIR) + "/tx_table_row.html");
+        template_file["css_styles"]      = xmreg::read(TMPL_CSS_STYLES);
+        template_file["header"]          = xmreg::read(TMPL_HEADER);
+        template_file["footer"]          = get_footer();
+        template_file["index2"]          = get_full_page(xmreg::read(TMPL_INDEX2));
+        template_file["mempool"]         = xmreg::read(TMPL_MEMPOOL);
+        template_file["altblocks"]       = get_full_page(xmreg::read(TMPL_ALTBLOCKS));
+        template_file["mempool_error"]   = xmreg::read(TMPL_MEMPOOL_ERROR);
+        template_file["mempool_full"]    = get_full_page(template_file["mempool"]);
+        template_file["block"]           = get_full_page(xmreg::read(TMPL_BLOCK));
+        template_file["tx"]              = get_full_page(xmreg::read(TMPL_TX));
+        template_file["my_outputs"]      = get_full_page(xmreg::read(TMPL_MY_OUTPUTS));
+        template_file["rawtx"]           = get_full_page(xmreg::read(TMPL_MY_RAWTX));
+        template_file["checkrawtx"]      = get_full_page(xmreg::read(TMPL_MY_CHECKRAWTX));
+        template_file["pushrawtx"]       = get_full_page(xmreg::read(TMPL_MY_PUSHRAWTX));
+        template_file["rawkeyimgs"]      = get_full_page(xmreg::read(TMPL_MY_RAWKEYIMGS));
+        template_file["rawoutputkeys"]   = get_full_page(xmreg::read(TMPL_MY_RAWOUTPUTKEYS));
+        template_file["checkrawkeyimgs"] = get_full_page(xmreg::read(TMPL_MY_CHECKRAWKEYIMGS));
+        template_file["checkoutputkeys"] = get_full_page(xmreg::read(TMPL_MY_CHECKRAWOUTPUTKEYS));
+        template_file["address"]         = get_full_page(xmreg::read(TMPL_ADDRESS));
+        template_file["search_results"]  = get_full_page(xmreg::read(TMPL_SEARCH_RESULTS));
+        template_file["tx_details"]      = xmreg::read(string(TMPL_PARIALS_DIR) + "/tx_details.html");
+        template_file["tx_table_header"] = xmreg::read(string(TMPL_PARIALS_DIR) + "/tx_table_header.html");
+        template_file["tx_table_row"]    = xmreg::read(string(TMPL_PARIALS_DIR) + "/tx_table_row.html");
 
-    if (enable_js) {
-        // JavaScript files
-        template_file["jquery.min.js"]   = xmreg::read(JS_JQUERY);
-        template_file["crc32.js"]        = xmreg::read(JS_CRC32);
-        template_file["crypto.js"]       = xmreg::read(JS_CRYPTO);
-        template_file["cn_util.js"]      = xmreg::read(JS_CNUTIL);
-        template_file["base58.js"]       = xmreg::read(JS_BASE58);
-        template_file["nacl-fast-cn.js"] = xmreg::read(JS_NACLFAST);
-        template_file["sha3.js"]         = xmreg::read(JS_SHA3);
-        template_file["config.js"]       = xmreg::read(JS_CONFIG);
-        template_file["biginteger.js"]   = xmreg::read(JS_BIGINT);
+        if (enable_js) {
+            // JavaScript files
+            template_file["jquery.min.js"]   = xmreg::read(JS_JQUERY);
+            template_file["crc32.js"]        = xmreg::read(JS_CRC32);
+            template_file["crypto.js"]       = xmreg::read(JS_CRYPTO);
+            template_file["cn_util.js"]      = xmreg::read(JS_CNUTIL);
+            template_file["base58.js"]       = xmreg::read(JS_BASE58);
+            template_file["nacl-fast-cn.js"] = xmreg::read(JS_NACLFAST);
+            template_file["sha3.js"]         = xmreg::read(JS_SHA3);
+            template_file["config.js"]       = xmreg::read(JS_CONFIG);
+            template_file["biginteger.js"]   = xmreg::read(JS_BIGINT);
 
-        // need to set  "testnet: false," flag to reflect
-        // if we are running testnet or mainnet explorer
+            // need to set  "testnet: false," flag to reflect
+            // if we are running testnet or mainnet explorer
 
-        if (testnet)
-        {
-            template_file["config.js"] = std::regex_replace(
-                    template_file["config.js"],
-                    std::regex("testnet: false"),
-                    "testnet: true");
+            if (testnet)
+            {
+                template_file["config.js"] = std::regex_replace(
+                        template_file["config.js"],
+                        std::regex("testnet: false"),
+                        "testnet: true");
+            }
+
+            // the same idea as above for the stagenet
+
+
+            template_file["all_in_one.js"] = template_file["jquery.min.js"] +
+                                             template_file["crc32.js"] +
+                                             template_file["biginteger.js"] +
+                                             template_file["config.js"] +
+                                             template_file["nacl-fast-cn.js"] +
+                                             template_file["crypto.js"] +
+                                             template_file["base58.js"] +
+                                             template_file["cn_util.js"] +
+                                             template_file["sha3.js"];
+
+            js_html_files += "<script src=\"/js/jquery.min.js\"></script>";
+            js_html_files += "<script src=\"/js/crc32.js\"></script>";
+            js_html_files += "<script src=\"/js/biginteger.js\"></script>";
+            js_html_files += "<script src=\"/js/config.js\"></script>";
+            js_html_files += "<script src=\"/js/nacl-fast-cn.js\"></script>";
+            js_html_files += "<script src=\"/js/crypto.js\"></script>";
+            js_html_files += "<script src=\"/js/base58.js\"></script>";
+            js_html_files += "<script src=\"/js/cn_util.js\"></script>";
+            js_html_files += "<script src=\"/js/sha3.js\"></script>";
+
+            // /js/all_in_one.js file does not exist. it is generated on the fly
+            // from the above real files.
+            js_html_files_all_in_one = "<script src=\"/js/all_in_one.js\"></script>";
         }
 
-        // the same idea as above for the stagenet
-
-        if (stagenet)
-        {
-            template_file["config.js"] = std::regex_replace(
-                    template_file["config.js"],
-                    std::regex("stagenet: false"),
-                    "stagenet: true");
-        }
-
-        template_file["all_in_one.js"] = template_file["jquery.min.js"] +
-                                         template_file["crc32.js"] +
-                                         template_file["biginteger.js"] +
-                                         template_file["config.js"] +
-                                         template_file["nacl-fast-cn.js"] +
-                                         template_file["crypto.js"] +
-                                         template_file["base58.js"] +
-                                         template_file["cn_util.js"] +
-                                         template_file["sha3.js"];
-
-        js_html_files += "<script src=\"/js/jquery.min.js\"></script>";
-        js_html_files += "<script src=\"/js/crc32.js\"></script>";
-        js_html_files += "<script src=\"/js/biginteger.js\"></script>";
-        js_html_files += "<script src=\"/js/config.js\"></script>";
-        js_html_files += "<script src=\"/js/nacl-fast-cn.js\"></script>";
-        js_html_files += "<script src=\"/js/crypto.js\"></script>";
-        js_html_files += "<script src=\"/js/base58.js\"></script>";
-        js_html_files += "<script src=\"/js/cn_util.js\"></script>";
-        js_html_files += "<script src=\"/js/sha3.js\"></script>";
-
-        // /js/all_in_one.js file does not exist. it is generated on the fly
-        // from the above real files.
-        js_html_files_all_in_one = "<script src=\"/js/all_in_one.js\"></script>";
     }
 
 }
@@ -663,8 +651,30 @@ index2(uint64_t page_no = 0, bool refresh_page = false)
     // get reference to txs mstch map to be field below
     mstch::array& txs = boost::get<mstch::array>(context["txs"]);
 
-    // calculate starting and ending block numbers to show
-    int64_t start_height = height - no_of_last_blocks * (page_no + 1);
+        // get the current blockchain height. Just to check
+        uint64_t height = core_storage->get_current_blockchain_height();
+
+        // initalise page tempate map with basic info about blockchain
+        mstch::map context {
+                {"testnet"                  , testnet},
+                {"testnet_url"              , testnet_url},
+                {"mainnet_url"              , mainnet_url},
+                {"refresh"                  , refresh_page},
+                {"height"                   , height},
+                {"server_timestamp"         , xmreg::timestamp_to_str_gm(local_copy_server_timestamp)},
+                {"age_format"               , string("[h:m:d]")},
+                {"page_no"                  , page_no},
+                {"total_page_no"            , (height / no_of_last_blocks)},
+                {"is_page_zero"             , !bool(page_no)},
+                {"no_of_last_blocks"        , no_of_last_blocks},
+                {"next_page"                , (page_no + 1)},
+                {"prev_page"                , (page_no > 0 ? page_no - 1 : 0)},
+                {"enable_pusher"            , enable_pusher},
+                {"enable_key_image_checker" , enable_key_image_checker},
+                {"enable_output_key_checker", enable_output_key_checker},
+                {"enable_autorefresh_option", enable_autorefresh_option},
+                {"show_cache_times"         , show_cache_times}
+        };
 
     // check if start height is not below range
     start_height = start_height < 0 ? 0 : start_height;
@@ -910,8 +920,14 @@ index2(uint64_t page_no = 0, bool refresh_page = false)
 
     // save computational times for disply in the frontend
 
-    context["construction_time_cached"] = fmt::format(
-            "{:0.4f}", duration_cached/1.0e6);
+        if (testnet)
+        {
+            hash_rate = std::to_string(current_network_info.hash_rate) + " H/s";
+        }
+        else
+        {
+            hash_rate = fmt::format("{:0.3f} MH/s", current_network_info.hash_rate/1.0e6);
+        }
 
     context["construction_time_non_cached"] = fmt::format(
             "{:0.4f}", duration_non_cached/1.0e6);
@@ -1124,7 +1140,23 @@ mempool(bool add_header_and_footer = false, uint64_t no_of_mempool_tx = 25)
         // this is when mempool is on its own page, /mempool
         add_css_style(context);
 
-        context["partial_mempool_shown"] = false;
+        // initalise page tempate map with basic info about blockchain
+        mstch::map context {
+                {"testnet"              , testnet},
+                {"blocks"               , mstch::array()}
+        };
+
+        uint64_t local_copy_server_timestamp = server_timestamp;
+
+        // get reference to alt blocks template map to be field below
+        mstch::array& blocks = boost::get<mstch::array>(context["blocks"]);
+
+        vector<string> atl_blks_hashes;
+
+        if (!rpc.get_alt_blocks(atl_blks_hashes))
+        {
+            cerr << "rpc.get_alt_blocks(atl_blks_hashes) failed" << endl;
+        }
 
         // render the page
         return mstch::render(template_file["mempool_full"], context);
@@ -1233,8 +1265,49 @@ show_block(uint64_t _blk_height)
         return fmt::format("Cant get block {:d}!", _blk_height);
     }
 
-    // get block's hash
-    crypto::hash blk_hash = core_storage->get_block_id_by_height(_blk_height);
+        // get block size in bytes
+        uint64_t blk_size = core_storage->get_db().get_block_size(_blk_height);
+
+        // miner reward tx
+        transaction coinbase_tx = blk.miner_tx;
+
+        // transcation in the block
+        vector<crypto::hash> tx_hashes = blk.tx_hashes;
+
+        bool have_txs = !blk.tx_hashes.empty();
+
+        // sum of all transactions in the block
+        uint64_t sum_fees = 0;
+
+        // get tx details for the coinbase tx, i.e., miners reward
+        tx_details txd_coinbase = get_tx_details(blk.miner_tx, true,
+                                                 _blk_height, current_blockchain_height);
+
+        // initalise page tempate map with basic info about blockchain
+        mstch::map context {
+                {"testnet"              , testnet},
+                {"blk_hash"             , blk_hash_str},
+                {"blk_height"           , _blk_height},
+                {"blk_timestamp"        , blk_timestamp},
+                {"blk_timestamp_epoch"  , blk.timestamp},
+                {"prev_hash"            , prev_hash_str},
+                {"next_hash"            , next_hash_str},
+                {"have_next_hash"       , have_next_hash},
+                {"have_prev_hash"       , have_prev_hash},
+                {"have_txs"             , have_txs},
+                {"no_txs"               , std::to_string(
+                        blk.tx_hashes.size())},
+                {"blk_age"              , age.first},
+                {"delta_time"           , delta_time},
+                {"blk_nonce"            , blk.nonce},
+                {"age_format"           , age.second},
+                {"major_ver"            , std::to_string(blk.major_version)},
+                {"minor_ver"            , std::to_string(blk.minor_version)},
+                {"blk_size"             , fmt::format("{:0.4f}",
+                                                      static_cast<double>(blk_size) / 1024.0)},
+        };
+        context.emplace("coinbase_txs", mstch::array{{txd_coinbase.get_mstch_map()}});
+        context.emplace("blk_txs"     , mstch::array());
 
     crypto::hash prev_hash = blk.prev_id;
     crypto::hash next_hash = null_hash;
@@ -1570,12 +1643,16 @@ show_tx(string tx_hash_str, uint16_t with_ring_signatures = 0, bool refresh_page
                                 tx_context});
 
 
-            } // if (core_storage->have_tx(tx_hash))
-            else
-            {
-                // still seems to be in mempool only.
-                // so just get its time duration, as its read only
-                // from cache
+        if (boost::get<bool>(tx_context["has_error"]))
+        {
+            return boost::get<string>(tx_context["error_msg"]);
+        }
+
+        mstch::map context {
+                {"testnet"          , this->testnet},
+                {"show_cache_times" , show_cache_times},
+                {"txs"              , mstch::array{}}
+        };
 
                 tx_context["from_cache"] = true;
 
@@ -1612,8 +1689,14 @@ show_tx(string tx_hash_str, uint16_t with_ring_signatures = 0, bool refresh_page
                             tx_context});
         }
 
-        tx_context["construction_time"] = fmt::format(
-                "{:0.4f}", static_cast<double>(duration.count())/1.0e6);
+        // parse string representing given monero address
+        cryptonote::account_public_address address;
+
+        if (!xmreg::parse_str_address(xmr_address_str,  address, testnet))
+        {
+            cerr << "Cant parse string address: " << xmr_address_str << endl;
+            return string("Cant parse xmr address: " + xmr_address_str);
+        }
 
     } // else if (tx_context_cache.Contains(tx_hash))
 
@@ -1795,11 +1878,46 @@ show_ringmembers_hex(string const& tx_hash_str)
             ::buff_to_hex_nodelimer(oss.str());
 }
 
-string
-show_ringmemberstx_hex(string const& tx_hash_str)
-{
-    transaction tx;
-    crypto::hash tx_hash;
+        // payments id. both normal and encrypted (payment_id8)
+        string pid_str   = pod_to_hex(txd.payment_id);
+        string pid8_str  = pod_to_hex(txd.payment_id8);
+
+        string shortcut_url = domain
+                              + (tx_prove ? "/prove" : "/myoutputs")
+                              + "/" + tx_hash_str
+                              + "/" + xmr_address_str
+                              + "/" + viewkey_str;
+
+
+        string viewkey_str_partial = viewkey_str;
+
+        // dont show full private keys. Only file first and last letters
+        for (size_t i = 3; i < viewkey_str_partial.length() - 2; ++i)
+            viewkey_str_partial[i] = '*';
+
+        // initalise page tempate map with basic info about blockchain
+        mstch::map context {
+                {"testnet"              , testnet},
+                {"tx_hash"              , tx_hash_str},
+                {"tx_prefix_hash"       , pod_to_hex(txd.prefix_hash)},
+                {"xmr_address"          , xmr_address_str},
+                {"viewkey"              , viewkey_str_partial},
+                {"tx_pub_key"           , pod_to_hex(txd.pk)},
+                {"blk_height"           , tx_blk_height_str},
+                {"tx_size"              , fmt::format("{:0.4f}",
+                                                      static_cast<double>(txd.size) / 1024.0)},
+                {"tx_fee"               , xmreg::xmr_amount_to_str(txd.fee, "{:0.12f}", true)},
+                {"blk_timestamp"        , blk_timestamp},
+                {"delta_time"           , age.first},
+                {"outputs_no"           , static_cast<uint64_t>(txd.output_pub_keys.size())},
+                {"has_payment_id"       , txd.payment_id  != null_hash},
+                {"has_payment_id8"      , txd.payment_id8 != null_hash8},
+                {"payment_id"           , pid_str},
+                {"payment_id8"          , pid8_str},
+                {"decrypted_payment_id8", string{}},
+                {"tx_prove"             , tx_prove},
+                {"shortcut_url"         , shortcut_url}
+        };
 
     if (!get_tx(tx_hash_str, tx, tx_hash))
         return string {"Cant get tx: "} +  tx_hash_str;
@@ -1832,7 +1950,14 @@ show_ringmemberstx_hex(string const& tx_hash_str)
             core_storage->get_db().get_output_tx_and_index(
                         in_key.amount, absolute_offsets, indices);
         }
-        catch (exception const& e)
+
+        public_key pub_key = tx_prove ? address.m_view_public_key : txd.pk;
+
+        //cout << "txd.pk: " << pod_to_hex(txd.pk) << endl;
+
+        if (!generate_key_derivation(pub_key,
+                                     tx_prove ? multiple_tx_secret_keys[0] : prv_view_key,
+                                     derivation))
         {
 
             string out_msg = fmt::format(
@@ -1852,8 +1977,9 @@ show_ringmemberstx_hex(string const& tx_hash_str)
         // serialize each mixin tx
         for (auto const& txi : indices)
         {
-           auto const& mixin_tx_hash = txi.first;
-           auto const& output_index_in_tx = txi.second;
+
+            context["decrypted_payment_id8"] = pod_to_hex(decrypted_payment_id8);
+        }
 
            transaction mixin_tx;
 
@@ -1883,10 +2009,10 @@ show_ringmemberstx_hex(string const& tx_hash_str)
     boost::archive::portable_binary_oarchive archive(oss);
     archive << all_mixin_txs;
 
-    // return as all_mixin_outputs vector hex
-    return epee::string_tools
-            ::buff_to_hex_nodelimer(oss.str());
-}
+            derive_public_key(derivation,
+                              output_idx,
+                              address.m_spend_public_key,
+                              tx_pubkey);
 
 /**
  * @brief Get ring member tx data
@@ -1909,7 +2035,12 @@ show_ringmemberstx_jsonhex(string const& tx_hash_str)
 
     vector<txin_to_key> input_key_imgs = xmreg::get_key_images(tx);
 
-    json tx_json;
+            if (!mine_output && txd.additional_pks.size() == txd.output_pub_keys.size())
+            {
+                derive_public_key(additional_derivations[output_idx],
+                                  output_idx,
+                                  address.m_spend_public_key,
+                                  tx_pubkey);
 
     string tx_hex;
 
@@ -2171,40 +2302,20 @@ show_my_outputs(string tx_hash_str,
     // parse tx hash string to hash object
     crypto::hash tx_hash;
 
-    if (!xmreg::parse_str_secret_key(tx_hash_str, tx_hash))
-    {
-        cerr << "Cant parse tx hash: " << tx_hash_str << endl;
-        return string("Cant get tx hash due to parse error: " + tx_hash_str);
-    }
+                public_key mixin_tx_pub_key
+                        = xmreg::get_tx_pub_key_from_received_outs(mixin_tx);
 
     // parse string representing given monero address
     cryptonote::address_parse_info address_info;
 
-    if (!xmreg::parse_str_address(xmr_address_str,  address_info, nettype))
-    {
-        cerr << "Cant parse string address: " << xmr_address_str << endl;
-        return string("Cant parse xmc address: " + xmr_address_str);
-    }
+                // public transaction key is combined with our viewkey
+                // to create, so called, derived key.
+                key_derivation derivation;
 
     // parse string representing given private key
     crypto::secret_key prv_view_key;
-
-    std::vector<crypto::secret_key> multiple_tx_secret_keys;
-
-    if (!xmreg::parse_str_secret_key(viewkey_str, multiple_tx_secret_keys))
-    {
-        cerr << "Cant parse the private key: " << viewkey_str << endl;
-        return string("Cant parse private key: " + viewkey_str);
-    }
-    if (multiple_tx_secret_keys.size() == 1)
-    {
-        prv_view_key = multiple_tx_secret_keys[0];
-    }
-    else if (!tx_prove)
-    {
-        cerr << "Concatenated secret keys are only for tx proving!" << endl;
-        return string("Concatenated secret keys are only for tx proving!");
-    }
+                    continue;
+                }
 
 
     // just to see how would having spend keys could worked
@@ -2245,15 +2356,23 @@ show_my_outputs(string tx_hash_str,
             return msg;
         }
 
-        crypto::hash tx_hash_from_blob;
-        crypto::hash tx_prefix_hash_from_blob;
+                    derive_public_key(derivation,
+                                      output_idx_in_tx,
+                                      address.m_spend_public_key,
+                                      tx_pubkey_generated);
 
-        if (!cryptonote::parse_and_validate_tx_from_blob(tx_data_blob,
-                                                         tx,
-                                                         tx_hash_from_blob,
-                                                         tx_prefix_hash_from_blob))
-        {
-            string msg = fmt::format("cant parse_and_validate_tx_from_blob");
+                    // check if generated public key matches the current output's key
+                    bool mine_output = (txout_k.key == tx_pubkey_generated);
+                    bool with_additional = false;
+                    if (!mine_output)
+                    {
+                        derive_public_key(additional_derivations[output_idx_in_tx],
+                                          output_idx_in_tx,
+                                          address.m_spend_public_key,
+                                          tx_pubkey_generated);
+                        mine_output = (txout_k.key == tx_pubkey_generated);
+                        with_additional = true;
+                    }
 
             cerr << msg << endl;
 
@@ -2443,11 +2562,10 @@ show_my_outputs(string tx_hash_str,
 
     for (pair<txout_to_key, uint64_t>& outp: txd.output_pub_keys)
     {
-
-        // get the tx output public key
-        // that normally would be generated for us,
-        // if someone had sent us some xmr.
-        public_key tx_pubkey;
+        // initalise page tempate map with basic info about blockchain
+        mstch::map context {
+                {"testnet"              , testnet},
+        };
 
         derive_public_key(derivation,
                           output_idx,
@@ -2487,8 +2605,15 @@ show_my_outputs(string tx_hash_str,
             if (!is_coinbase(tx))
             {
 
-                // initialize with regular amount
-                uint64_t rct_amount = money_transfered[output_idx];
+        // initalize page template context map
+        mstch::map context {
+                {"testnet"              , testnet},
+                {"unsigned_tx_given"    , unsigned_tx_given},
+                {"have_raw_tx"          , true},
+                {"has_error"            , false},
+                {"error_msg"            , string {}},
+                {"data_prefix"          , data_prefix},
+        };
 
                 bool r;
 
@@ -2572,19 +2697,12 @@ show_my_outputs(string tx_hash_str,
             if (are_absolute_offsets_good(absolute_offsets, in_key) == false)
                 continue;
 
-            //core_storage->get_db().get_output_key(in_key.amount,
-                                                  //absolute_offsets,
-                                                  //mixin_outputs);
-            
-            get_output_key<BlockchainDB>(in_key.amount,
-                                           absolute_offsets,
-                                           mixin_outputs);
-        }
-        catch (const OUTPUT_DNE& e)
-        {
-            cerr << "get_output_keys: " << e.what() << endl;
-            continue;
-        }
+                    for (const tx_destination_entry& a_dest: tx_cd.splitted_dsts)
+                    {
+                        mstch::map dest_info {
+                                {"dest_address"  , get_account_address_as_str(testnet, a_dest.addr)},
+                                {"dest_amount"   , xmreg::xmr_amount_to_str(a_dest.amount)}
+                        };
 
         inputs.push_back(mstch::map{
                 {"key_image"       , pod_to_hex(in_key.k_image)},
@@ -2998,17 +3116,35 @@ show_checkrawtx(string raw_tx_data, string action)
     string decoded_raw_tx_data = epee::string_encoding::base64_decode(raw_tx_data);
 
     //cout << decoded_raw_tx_data << endl;
+                // destiantion address for this tx
+                for (tx_destination_entry& a_dest: ptx.construction_data.splitted_dsts)
+                {
+                    //stealth_address_amount.insert({dest.addr, dest.amount});
+                    //cout << get_account_address_as_str(testnet, a_dest.addr) << endl;
+                    //address_amounts.push_back(a_dest.amount);
 
-    const size_t magiclen = strlen(UNSIGNED_TX_PREFIX);
+                    destination_addresses.push_back(
+                            mstch::map {
+                                    {"dest_address"   , get_account_address_as_str(testnet, a_dest.addr)},
+                                    {"dest_amount"    , xmreg::xmr_amount_to_str(a_dest.amount)},
+                                    {"is_this_change" , false}
+                            }
+                    );
 
     string data_prefix = xmreg::make_printable(decoded_raw_tx_data.substr(0, magiclen));
 
     bool unsigned_tx_given {false};
 
-    if (strncmp(decoded_raw_tx_data.c_str(), UNSIGNED_TX_PREFIX, magiclen) == 0)
-    {
-        unsigned_tx_given = true;
-    }
+                // get change address and amount info
+                if (ptx.construction_data.change_dts.amount > 0)
+                {
+                    destination_addresses.push_back(
+                            mstch::map {
+                                    {"dest_address"   , get_account_address_as_str(testnet, ptx.construction_data.change_dts.addr)},
+                                    {"dest_amount"    , xmreg::xmr_amount_to_str(ptx.construction_data.change_dts.amount)},
+                                    {"is_this_change" , true}
+                            }
+                    );
 
     // initalize page template context map
     mstch::map context {
@@ -3246,7 +3382,13 @@ show_checkrawtx(string raw_tx_data, string action)
 
                     dest_sources.push_back(single_dest_source);
 
-                    mixin_timestamp_groups.push_back(mixin_timestamps);
+        // initalize page template context map
+        mstch::map context {
+                {"testnet"              , testnet},
+                {"have_raw_tx"          , true},
+                {"has_error"            , false},
+                {"error_msg"            , string {}},
+        };
 
                 } //  for (size_t i = 0; i < no_of_sources; ++i)
 
@@ -3564,9 +3706,13 @@ show_checkrawtx(string raw_tx_data, string action)
 
             uint64_t input_idx {0};
 
-            // mark which mixin is real in each input's mstch context
-            for (mstch::node& input_node: inputs)
-            {
+    string
+    show_rawkeyimgs()
+    {
+        // initalize page template context map
+        mstch::map context {
+                {"testnet"            , testnet},
+        };
 
                 mstch::map& input_map = boost::get<mstch::map>(input_node);
 
@@ -3575,7 +3721,13 @@ show_checkrawtx(string raw_tx_data, string action)
                         boost::get<mstch::map>(input_node)["amount"]
                 );
 
-                amount = xmreg::xmr_amount_to_str(real_amounts.at(input_idx));
+    string
+    show_rawoutputkeys()
+    {
+        // initalize page template context map
+        mstch::map context {
+                {"testnet"            , testnet},
+        };
 
                 // check if key images are spend or not
 
@@ -3596,9 +3748,12 @@ show_checkrawtx(string raw_tx_data, string action)
                         boost::get<mstch::map>(input_node)["mixins"]
                 );
 
-                for (mstch::node& mixin_node: mixins)
-                {
-                    mstch::map& mixin = boost::get<mstch::map>(mixin_node);
+        // initalize page template context map
+        mstch::map context{
+                {"testnet"         , testnet},
+                {"has_error"       , false},
+                {"error_msg"       , string{}},
+        };
 
                     string mix_pub_key_str = boost::get<string>(mixin["mix_pub_key"]);
 
@@ -3685,7 +3840,13 @@ show_pushrawtx(string raw_tx_data, string action)
             return mstch::render(full_page, context);
         }
 
-        if (this->enable_pusher == false)
+        // header is public spend and keys
+        const size_t header_lenght = 2 * sizeof(crypto::public_key);
+        const size_t key_img_size  = sizeof(crypto::key_image);
+        const size_t record_lenght = key_img_size + sizeof(crypto::signature);
+        const size_t chacha_length = sizeof(crypto::chacha8_key);
+
+        if (decoded_raw_data.size() < header_lenght)
         {
             string error_msg = fmt::format(
                     "Pushing disabled!\n "
@@ -3697,7 +3858,20 @@ show_pushrawtx(string raw_tx_data, string action)
             return mstch::render(full_page, context);
         }
 
-        bool r {false};
+        // get xmr address stored in this key image file
+        const account_public_address* xmr_address =
+                reinterpret_cast<const account_public_address*>(
+                        decoded_raw_data.data());
+
+
+
+        context.insert({"address"        , REMOVE_HASH_BRAKETS(
+                xmreg::print_address(*xmr_address, false))});
+        context.insert({"viewkey"        , REMOVE_HASH_BRAKETS(
+                fmt::format("{:s}", prv_view_key))});
+        context.insert({"has_total_xmr"  , false});
+        context.insert({"total_xmr"      , string{}});
+        context.insert({"key_imgs"       , mstch::array{}});
 
         string s = decoded_raw_tx_data.substr(magiclen);
 
@@ -3722,8 +3896,14 @@ show_pushrawtx(string raw_tx_data, string action)
             string error_msg = fmt::format("Deserialization of signed tx data NOT successful! "
                                                    "Maybe its not base64 encoded?");
 
-            context["has_error"] = true;
-            context["error_msg"] = error_msg;
+            mstch::map key_img_info {
+                    {"key_no"              , fmt::format("{:03d}", n)},
+                    {"key_image"           , pod_to_hex(key_image)},
+                    {"signature"           , fmt::format("{:s}", signature)},
+                    {"address"             , xmreg::print_address(*xmr_address, false)},
+                    {"is_spent"            , core_storage->have_tx_keyimg_as_spent(key_image)},
+                    {"tx_hash"             , string{}}
+            };
 
             return mstch::render(full_page, context);
         }
@@ -3744,8 +3924,11 @@ show_pushrawtx(string raw_tx_data, string action)
 
         string tx_hash_str  = REMOVE_HASH_BRAKETS(fmt::format("{:s}", txd.hash));
 
-        mstch::map tx_cd_data {
-                {"tx_hash"          , tx_hash_str}
+        // initalize page template context map
+        mstch::map context{
+                {"testnet"         , testnet},
+                {"has_error"       , false},
+                {"error_msg"       , string{}}
         };
 
         // check in mempool already contains tx to be submited
@@ -3839,14 +4022,13 @@ show_pushrawtx(string raw_tx_data, string action)
 }
 
 
-string
-show_rawkeyimgs()
-{
-    // initalize page template context map
-    mstch::map context {
-            {"testnet"            , testnet},
-            {"stagenet"           , stagenet},
-    };
+        context.insert({"address"        , REMOVE_HASH_BRAKETS(
+                xmreg::print_address(*xmr_address, false))});
+        context.insert({"viewkey"        , REMOVE_HASH_BRAKETS(
+                fmt::format("{:s}", prv_view_key))});
+        context.insert({"has_total_xmr"  , false});
+        context.insert({"total_xmr"      , string{}});
+        context.insert({"output_keys"    , mstch::array{}});
 
     add_css_style(context);
 
@@ -3915,11 +4097,16 @@ show_checkrawkeyimgs(string raw_data, string viewkey_str)
         return mstch::render(full_page, context);
     }
 
-    const size_t magiclen = strlen(KEY_IMAGE_EXPORT_FILE_MAGIC);
+                public_key tx_pub_key = xmreg::get_tx_pub_key_from_received_outs(tx);
 
     string data_prefix = xmreg::make_printable(decoded_raw_data.substr(0, magiclen));
 
-    context["data_prefix"] = data_prefix;
+                    bool r = decode_ringct(tx.rct_signatures,
+                                           tx_pub_key,
+                                           prv_view_key,
+                                           td.m_internal_output_index,
+                                           tx.rct_signatures.ecdhInfo[td.m_internal_output_index].mask,
+                                           xmr_amount);
 
     if (strncmp(decoded_raw_data.c_str(), KEY_IMAGE_EXPORT_FILE_MAGIC, magiclen) != 0)
     {
@@ -4055,17 +4242,24 @@ show_checkcheckrawoutput(string raw_data, string viewkey_str)
     {
         string error_msg = fmt::format("Cant parse the private key: " + viewkey_str);
 
-        context["has_error"] = true;
-        context["error_msg"] = error_msg;
+        // check if monero address is given based on its length
+        // if yes, then we can only show its public components
+        if (search_str_length == 95)
+        {
+            // parse string representing given monero address
+            // address_parse_info address_info;
+            cryptonote::account_public_address address;
 
-        return mstch::render(full_page, context);
-    }
 
-    const size_t magiclen = strlen(OUTPUT_EXPORT_FILE_MAGIC);
+            if (!xmreg::parse_str_address(search_text, address, false))
+            {
+                cerr << "Cant parse string address: " << search_text << endl;
+                return string("Cant parse address (probably incorrect format): ")
+                       + search_text;
+            }
 
-    string data_prefix = xmreg::make_printable(decoded_raw_data.substr(0, magiclen));
-
-    context["data_prefix"] = data_prefix;
+            return show_address_details(address, false);
+        }
 
     if (strncmp(decoded_raw_data.c_str(), OUTPUT_EXPORT_FILE_MAGIC, magiclen) != 0)
     {
@@ -4077,12 +4271,25 @@ show_checkcheckrawoutput(string raw_data, string viewkey_str)
         return mstch::render(full_page, context);
     }
 
+            bool has_payment_id;
 
-    // decrypt key images data using private view key
-    decoded_raw_data = xmreg::decrypt(
-            std::string(decoded_raw_data, magiclen),
-            prv_view_key, true);
+            crypto::hash8 encrypted_payment_id;
 
+            bool testnet;
+
+            if (!get_account_integrated_address_from_str(address,
+                                                    has_payment_id,
+                                                    encrypted_payment_id,
+                                                    testnet,
+                                                    search_text))
+            {
+                cerr << "Cant parse string integerated address: " << search_text << endl;
+                return string("Cant parse address (probably incorrect format): ")
+                       + search_text;
+            }
+
+            return show_integrated_address_details(address, encrypted_payment_id, testnet);
+        }
 
     if (decoded_raw_data.empty())
     {
@@ -4095,14 +4302,21 @@ show_checkcheckrawoutput(string raw_data, string viewkey_str)
         return mstch::render(full_page, context);
     }
 
+    string
+    show_address_details(const account_public_address& address, bool testnet)
+    {
 
-    // header is public spend and keys
-    const size_t header_lenght    = 2 * sizeof(crypto::public_key);
+        string address_str      = xmreg::print_address(address, testnet);
+        string pub_viewkey_str  = fmt::format("{:s}", address.m_view_public_key);
+        string pub_spendkey_str = fmt::format("{:s}", address.m_spend_public_key);
 
-    // get xmr address stored in this key image file
-    const account_public_address* xmr_address =
-            reinterpret_cast<const account_public_address*>(
-                    decoded_raw_data.data());
+        mstch::map context {
+                {"xmr_address"        , REMOVE_HASH_BRAKETS(address_str)},
+                {"public_viewkey"     , REMOVE_HASH_BRAKETS(pub_viewkey_str)},
+                {"public_spendkey"    , REMOVE_HASH_BRAKETS(pub_spendkey_str)},
+                {"is_integrated_addr" , false},
+                {"testnet"            , testnet},
+        };
 
     address_parse_info address_info {*xmr_address, false, false, crypto::null_hash8};
 
@@ -4113,7 +4327,26 @@ show_checkcheckrawoutput(string raw_data, string viewkey_str)
     context.insert({"total_xmc"      , string{}});
     context.insert({"output_keys"    , mstch::array{}});
 
-    mstch::array& output_keys_ctx = boost::get<mstch::array>(context["output_keys"]);
+    // ;
+    string
+    show_integrated_address_details(const account_public_address& address,
+                                    const crypto::hash8& encrypted_payment_id,
+                                    bool testnet = false)
+    {
+
+        string address_str        = xmreg::print_address(address, testnet);
+        string pub_viewkey_str    = fmt::format("{:s}", address.m_view_public_key);
+        string pub_spendkey_str   = fmt::format("{:s}", address.m_spend_public_key);
+        string enc_payment_id_str = fmt::format("{:s}", encrypted_payment_id);
+
+        mstch::map context {
+                {"xmr_address"          , REMOVE_HASH_BRAKETS(address_str)},
+                {"public_viewkey"       , REMOVE_HASH_BRAKETS(pub_viewkey_str)},
+                {"public_spendkey"      , REMOVE_HASH_BRAKETS(pub_spendkey_str)},
+                {"encrypted_payment_id" , REMOVE_HASH_BRAKETS(enc_payment_id_str)},
+                {"is_integrated_addr"   , true},
+                {"testnet"              , testnet},
+        };
 
 
     std::vector<tools::wallet2::transfer_details> outputs;
@@ -4202,8 +4435,13 @@ show_checkcheckrawoutput(string raw_data, string viewkey_str)
                     context["has_error"] = true;
                     context["error_msg"] = error_msg;
 
-                    return mstch::render(full_page, context);
-                }
+        // initalise page tempate map with basic info about blockchain
+        mstch::map context {
+                {"testnet"         , testnet},
+                {"search_text"     , search_text},
+                {"no_results"      , true},
+                {"to_many_results" , false}
+        };
 
             } //  if (!is_coinbase(tx))
 
@@ -5140,7 +5378,11 @@ json_rawblock(string block_no_or_hash)
             return j_response;
         }
 
-        if (!core_storage->get_block_by_hash(blk_hash, blk))
+        // parse string representing given monero address
+        // address_parse_info address_info;
+        cryptonote::account_public_address address;
+
+        if (!xmreg::parse_str_address(address_str,  address, testnet))
         {
             j_data["title"] = fmt::format("Cant get block: {:s}", blk_hash);
             return j_response;
@@ -5259,7 +5501,7 @@ json_transactions(string _page, string _limit)
                 {"txs"          , json::array()}
         });
 
-        json& j_txs = j_blocks.back()["txs"];
+        public_key pub_key = tx_prove ? address.m_view_public_key : txd.pk;
 
         vector<cryptonote::transaction> blk_txs {blk.miner_tx};
         vector<crypto::hash> missed_txs;
@@ -5296,18 +5538,23 @@ json_transactions(string _page, string _limit)
     return j_response;
 }
 
+            derive_public_key(derivation,
+                              output_idx,
+                              address.m_spend_public_key,
+                              tx_pubkey);
 
-/*
-* Lets use this json api convention for success and error
-* https://labs.omniti.com/labs/jsend
-*/
-json
-json_mempool(string _page, string _limit)
-{
-    json j_response {
-            {"status", "fail"},
-            {"data",   json {}}
-    };
+            // check if generated public key matches the current output's key
+            bool mine_output = (outp.first.key == tx_pubkey);
+            bool with_additional = false;
+            if (!mine_output && txd.additional_pks.size() == txd.output_pub_keys.size())
+            {
+                derive_public_key(additional_derivations[output_idx],
+                                  output_idx,
+                                  address.m_spend_public_key,
+                                  tx_pubkey);
+                mine_output = (outp.first.key == tx_pubkey);
+                with_additional = true;
+            }
 
     json& j_data = j_response["data"];
 
@@ -5346,7 +5593,13 @@ json_mempool(string _page, string _limit)
 
     int64_t end_height = start_height + limit;
 
-    end_height = end_height > no_mempool_txs ? no_mempool_txs : end_height;
+        // return parsed values. can be use to double
+        // check if submited data in the request
+        // matches to what was used to produce response.
+        j_data["tx_hash"]  = pod_to_hex(txd.hash);
+        j_data["address"]  = pod_to_hex(address);
+        j_data["viewkey"]  = pod_to_hex(prv_view_key);
+        j_data["tx_prove"] = tx_prove;
 
     // check if start height is not below range
     start_height = start_height > end_height ? end_height - limit : start_height;
@@ -5510,7 +5763,13 @@ json_outputs(string tx_hash_str,
             j_response["message"] = "Viewkey not provided";
             return j_response;
         }
-        else
+
+
+        // parse string representing given monero address
+        // address_parse_info address_info;
+        cryptonote::account_public_address address;
+
+        if (!xmreg::parse_str_address(address_str, address, false))
         {
             j_response["status"]  = "error";
             j_response["message"] = "Tx private key not provided";
@@ -5630,14 +5889,6 @@ json_outputs(string tx_hash_str,
             with_additional = true;
         }
 
-        // if mine output has RingCT, i.e., tx version is 2
-        if (mine_output && tx.version == 2)
-        {
-            // cointbase txs have amounts in plain sight.
-            // so use amount from ringct, only for non-coinbase txs
-            if (!is_coinbase(tx))
-            {
-
                 // initialize with regular amount
                 uint64_t rct_amount = money_transfered[output_idx];
 
@@ -5702,7 +5953,13 @@ json_outputsblocks(string _limit,
             {"data",   json {}}
     };
 
-    json& j_data = j_response["data"];
+        // return parsed values. can be use to double
+        // check if submited data in the request
+        // matches to what was used to produce response.
+        j_data["viewkey"]  = pod_to_hex(prv_view_key);
+        j_data["limit"]    = _limit;
+        j_data["height"]   = height;
+        j_data["mempool"]  = in_mempool_aswell;
 
     uint64_t no_of_last_blocks {3};
 
@@ -6002,9 +6259,11 @@ get_payment_id_as_string(
     // decrypt encrypted payment id, as used in integreated addresses
     crypto::hash8 decrypted_payment_id8 = txd.payment_id8;
 
-    if (decrypted_payment_id8 != null_hash8)
-    {
-        if (mcore->get_device()->decrypt_payment_id(decrypted_payment_id8, txd.pk, prv_view_key))
+        if (decrypted_payment_id8 != null_hash8)
+        {
+            payment_id = pod_to_hex(decrypted_payment_id8);
+        }
+        else if(txd.payment_id != null_hash)
         {
             payment_id = pod_to_hex(decrypted_payment_id8);
         }
@@ -6392,7 +6651,58 @@ construct_tx_context(transaction tx, uint16_t with_ring_signatures = 0)
         show_part_of_inputs = false;
     }
 
-    vector<vector<uint64_t>> mixin_timestamp_groups;
+
+        // payments id. both normal and encrypted (payment_id8)
+        string pid_str   = pod_to_hex(txd.payment_id);
+        string pid8_str  = pod_to_hex(txd.payment_id8);
+
+
+        string tx_json = obj_to_json_str(tx);
+
+        // use this regex to remove all non friendly characters in payment_id_as_ascii string
+        static std::regex e {"[^a-zA-Z0-9 ./\\\\!]"};
+
+        double tx_size = static_cast<double>(txd.size) / 1024.0;
+
+        double payed_for_kB = XMR_AMOUNT(txd.fee) / tx_size;
+
+        // initalise page tempate map with basic info about blockchain
+        mstch::map context {
+                {"testnet"               , testnet},
+                {"tx_hash"               , tx_hash_str},
+                {"tx_prefix_hash"        , string{}},
+                {"tx_pub_key"            , pod_to_hex(txd.pk)},
+                {"blk_height"            , tx_blk_height_str},
+                {"tx_blk_height"         , tx_blk_height},
+                {"tx_size"               , fmt::format("{:0.4f}", tx_size)},
+                {"tx_fee"                , xmreg::xmr_amount_to_str(txd.fee, "{:0.12f}", false)},
+                {"payed_for_kB"          , fmt::format("{:0.12f}", payed_for_kB)},
+                {"tx_version"            , static_cast<uint64_t>(txd.version)},
+                {"blk_timestamp"         , blk_timestamp},
+                {"blk_timestamp_uint"    , blk.timestamp},
+                {"delta_time"            , age.first},
+                {"inputs_no"             , static_cast<uint64_t>(txd.input_key_imgs.size())},
+                {"has_inputs"            , !txd.input_key_imgs.empty()},
+                {"outputs_no"            , static_cast<uint64_t>(txd.output_pub_keys.size())},
+                {"has_payment_id"        , txd.payment_id  != null_hash},
+                {"has_payment_id8"       , txd.payment_id8 != null_hash8},
+                {"confirmations"         , txd.no_confirmations},
+                {"payment_id"            , pid_str},
+                {"payment_id_as_ascii"   , remove_bad_chars(txd.payment_id_as_ascii)},
+                {"payment_id8"           , pid8_str},
+                {"extra"                 , txd.get_extra_str()},
+                {"with_ring_signatures"  , static_cast<bool>(
+                                                   with_ring_signatures)},
+                {"tx_json"               , tx_json},
+                {"is_ringct"             , (tx.version > 1)},
+                {"rct_type"              , tx.rct_signatures.type},
+                {"has_error"             , false},
+                {"error_msg"             , string("")},
+                {"have_raw_tx"           , false},
+                {"show_more_details_link", true},
+                {"from_cache"            , false},
+                {"construction_time"     , string {}},
+        };
 
     // make timescale maps for mixins in input
     for (const txin_to_key &in_key: txd.input_key_imgs)
@@ -6838,8 +7148,11 @@ get_tx_details(const transaction& tx,
 
         txd.blk_height = core_storage->get_db().get_tx_block_height(txd.hash);
 
-        // get the current blockchain height. Just to check
-        uint64_t bc_height = core_storage->get_current_blockchain_height();
+        // get tx public key from extra
+        // this check if there are two public keys
+        // due to previous bug with sining txs:
+        // https://github.com/monero-project/monero/pull/1358/commits/7abfc5474c0f86e16c405f154570310468b635c2
+        txd.pk = xmreg::get_tx_pub_key_from_received_outs(tx);
 
         txd.no_confirmations = bc_height - (txd.blk_height);
     }
@@ -7067,20 +7380,45 @@ are_absolute_offsets_good(
     return !offset_too_large;
 }
 
-string
-get_footer()
-{
-    // set last git commit date based on
-    // autogenrated version.h during compilation
-    static const mstch::map footer_context {
-            {"last_git_commit_hash", string {GIT_COMMIT_HASH}},
-            {"last_git_commit_date", string {GIT_COMMIT_DATETIME}},
-            {"git_branch_name"     , string {GIT_BRANCH_NAME}},
-            {"monero_version_full" , string {MONERO_VERSION_FULL}},
-            {"api"                 , std::to_string(ONIONEXPLORER_RPC_VERSION_MAJOR)
-                                     + "."
-                                     + std::to_string(ONIONEXPLORER_RPC_VERSION_MINOR)},
-    };
+    string
+    get_full_page(const string& middle)
+    {
+        return template_file["header"]
+               + middle
+               + template_file["footer"];
+    }
+
+    bool
+    get_monero_network_info(json& j_info)
+    {
+        MempoolStatus::network_info local_copy_network_info
+            = MempoolStatus::current_network_info;
+
+        j_info = json {
+           {"status"                    , local_copy_network_info.current},
+           {"current"                   , local_copy_network_info.current},
+           {"height"                    , local_copy_network_info.height},
+           {"target_height"             , local_copy_network_info.target_height},
+           {"difficulty"                , local_copy_network_info.difficulty},
+           {"target"                    , local_copy_network_info.target},
+           {"hash_rate"                 , local_copy_network_info.hash_rate},
+           {"tx_count"                  , local_copy_network_info.tx_count},
+           {"tx_pool_size"              , local_copy_network_info.tx_pool_size},
+           {"alt_blocks_count"          , local_copy_network_info.alt_blocks_count},
+           {"outgoing_connections_count", local_copy_network_info.outgoing_connections_count},
+           {"incoming_connections_count", local_copy_network_info.incoming_connections_count},
+           {"white_peerlist_size"       , local_copy_network_info.white_peerlist_size},
+           {"grey_peerlist_size"        , local_copy_network_info.grey_peerlist_size},
+           {"top_block_hash"            , pod_to_hex(local_copy_network_info.top_block_hash)},
+           {"cumulative_difficulty"     , local_copy_network_info.cumulative_difficulty},
+           {"block_size_limit"          , local_copy_network_info.block_size_limit},
+           {"start_time"                , local_copy_network_info.start_time},
+           {"fee_per_kb"                , local_copy_network_info.fee_per_kb},
+           {"current_hf_version"        , local_copy_network_info.current_hf_version}
+        };
+
+        return local_copy_network_info.current;
+    }
 
     string footer_html = mstch::render(xmreg::read(TMPL_FOOTER), footer_context);
 
