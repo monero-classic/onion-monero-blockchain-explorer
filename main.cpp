@@ -83,10 +83,20 @@ main(int ac, const char* av[])
 
 
     bool testnet                      {*testnet_opt};
+    bool stagenet                     {*stagenet_opt};
 
+    if (testnet && stagenet)
+    {
+        cerr << "testnet and stagenet cannot be specified at the same time!" << endl;
+        return EXIT_FAILURE;
+    }
+
+    const cryptonote::network_type nettype = testnet ?
+        cryptonote::network_type::TESTNET : stagenet ?
+        cryptonote::network_type::STAGENET : cryptonote::network_type::MAINNET;
 
     bool enable_pusher                {*enable_pusher_opt};
-    bool enable_js                    {true};
+    bool enable_js                    {*enable_js_opt};
     bool enable_key_image_checker     {*enable_key_image_checker_opt};
     bool enable_autorefresh_option    {*enable_autorefresh_option_opt};
     bool enable_output_key_checker    {*enable_output_key_checker_opt};
@@ -149,7 +159,7 @@ main(int ac, const char* av[])
     // get blockchain path
     path blockchain_path;
 
-    if (!xmreg::get_blockchain_path(bc_path_opt, blockchain_path, false))
+    if (!xmreg::get_blockchain_path(bc_path_opt, blockchain_path, nettype))
     {
         cerr << "Error getting blockchain path." << endl;
         return EXIT_FAILURE;
@@ -175,7 +185,8 @@ main(int ac, const char* av[])
 
     if (testnet && deamon_url == "http:://127.0.0.1:18081")
         deamon_url = "http:://127.0.0.1:28081";
-
+    if (stagenet && deamon_url == "http:://127.0.0.1:18081")
+        deamon_url = "http:://127.0.0.1:38081";
 
     uint64_t mempool_info_timeout {5000};
 
@@ -210,7 +221,8 @@ main(int ac, const char* av[])
 
         xmreg::CurrentBlockchainStatus::blockchain_path
                 = blockchain_path;
-
+        xmreg::CurrentBlockchainStatus::nettype
+                = nettype;
         xmreg::CurrentBlockchainStatus::deamon_url
                 = deamon_url;
         xmreg::CurrentBlockchainStatus::set_blockchain_variables(
@@ -226,7 +238,8 @@ main(int ac, const char* av[])
 
     xmreg::MempoolStatus::blockchain_path
             = blockchain_path;
-
+    xmreg::MempoolStatus::nettype
+            = nettype;
     xmreg::MempoolStatus::deamon_url
             = deamon_url;
     xmreg::MempoolStatus::set_blockchain_variables(
@@ -261,7 +274,7 @@ main(int ac, const char* av[])
     xmreg::page xmrblocks(&mcore,
                           core_storage,
                           deamon_url,
-                          false,
+                          nettype,
                           enable_pusher,
                           enable_js,
                           enable_as_hex,

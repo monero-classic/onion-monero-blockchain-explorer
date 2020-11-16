@@ -150,7 +150,12 @@ MempoolStatus::read_mempool()
         crypto::hash tx_hash;
         crypto::hash tx_prefix_hash;
 
-
+        if (!parse_and_validate_tx_from_blob(
+                _tx_info.tx_blob, tx, tx_hash, tx_prefix_hash))
+        {
+            cerr << "Cant make tx from _tx_info.tx_blob" << endl;
+            return false;
+        }
 
         mempool_size_kB += _tx_info.blob_size;
 
@@ -206,7 +211,13 @@ MempoolStatus::read_mempool()
             last_tx.pID = 'l'; // legacy payment id
         else if (payment_id8 != null_hash8)
             last_tx.pID = 'e'; // encrypted payment id
-
+        else if (!get_additional_tx_pub_keys_from_extra(tx).empty())
+        {
+            // if multioutput tx have additional public keys,
+            // mark it so that it represents that it has at least
+            // one sub-address
+            last_tx.pID = 's';
+        }
        // } // if (hex_to_pod(_tx_info.id_hash, mem_tx_hash))
 
     } // for (size_t i = 0; i < mempool_tx_info.size(); ++i)
@@ -275,7 +286,8 @@ MempoolStatus::read_network_info()
     local_copy.outgoing_connections_count = rpc_network_info.outgoing_connections_count;
     local_copy.incoming_connections_count = rpc_network_info.incoming_connections_count;
     local_copy.white_peerlist_size        = rpc_network_info.white_peerlist_size;
-
+    local_copy.nettype                    = rpc_network_info.testnet ? cryptonote::network_type::TESTNET : 
+                                            rpc_network_info.stagenet ? cryptonote::network_type::STAGENET : cryptonote::network_type::MAINNET;
     local_copy.cumulative_difficulty      = rpc_network_info.cumulative_difficulty;
     local_copy.cumulative_difficulty_top64 = rpc_network_info.cumulative_difficulty_top64;
     local_copy.block_size_limit           = rpc_network_info.block_size_limit;
@@ -335,7 +347,7 @@ MempoolStatus::is_thread_running()
 
 bf::path MempoolStatus::blockchain_path {"/home/mwo/.bitmonero/lmdb"};
 string MempoolStatus::deamon_url {"http:://127.0.0.1:18081"};
-
+cryptonote::network_type MempoolStatus::nettype {cryptonote::network_type::MAINNET};
 atomic<bool>       MempoolStatus::is_running {false};
 boost::thread      MempoolStatus::m_thread;
 Blockchain*        MempoolStatus::core_storage {nullptr};

@@ -183,6 +183,7 @@
 
 
                 $("#decode_btn").click(function() {
+
                     var address = $("input[name=xmc_address]").val().trim();
                     var viewkey = $("input[name=viewkey]").val().trim();
 
@@ -210,6 +211,7 @@
 
                     var address    = $("input[name=xmcaddress]").val().trim();
                     var tx_prv_key = $("input[name=txprvkey]").val().trim();
+
                     if (!address || !tx_prv_key) {
                         $("#decode-prove-results").html("<h4>Address or tx private key not provided!</h4>");
                         return;
